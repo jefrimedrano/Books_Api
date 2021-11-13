@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Books_Api.Services
@@ -105,6 +106,49 @@ namespace Books_Api.Services
 			}
 		}
 
+		#endregion
+
+		#region POST
+		public async Task<ResultModel> Post<T>(string Accion, T Modelo)
+		{
+			try
+			{
+				HttpClient client = ClientRequest();
+
+				var request = JsonConvert.SerializeObject(Modelo);
+				var content = new StringContent(request, Encoding.UTF8, "application/json");
+				var url = Accion;
+				var response = await client.PostAsync(url, content);
+
+				if (!response.IsSuccessStatusCode)
+				{
+					return new ResultModel
+					{
+						Success = false,
+						Messages = response.ReasonPhrase,
+					};
+				}
+
+				var result = await response.Content.ReadAsStringAsync();
+				var data = JsonConvert.DeserializeObject<T>(result);
+
+				return new ResultModel
+				{
+					Success = true,
+					Messages = response.ReasonPhrase,
+					Data = data,
+				};
+			}
+			catch (Exception ex)
+			{
+
+				return new ResultModel
+				{
+					Success = false,
+					Messages = ex.Message,
+				};
+			}
+		}
 		#endregion
 	}
 }
